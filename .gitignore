@@ -1,0 +1,4 @@
+config.py
+bot.db
+db_reset.py
+__pycache__/
