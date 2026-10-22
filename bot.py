@@ -432,4 +432,74 @@ async def 마력회복(interaction: discord.Interaction, count: int = 1) :
 
     await interaction.response.send_message(embed = embed)
 
+async def 마법자동완성(
+    interaction: discord.Interaction,
+    current: str
+) -> list[app_commands.Choice[str]] :
+    cursor.execute(
+        "SELECT spells FROM user_spells WHERE user_id = ?",
+        (interaction.user.id,)
+    )
+    result = cursor.fetchone()
+
+    if result is None:
+        return []
+    user_spell = json.loads(result[0])
+    return [
+        app_commands.Choice(
+            name = f"{name}({data['mastery']}LV)",
+            value = name
+        )
+       for name, data in user_spell.items()
+       if current.lower() in name.lower()
+    ][:25]
+@bot.tree.command(
+    name = '마법삭제',
+    description = '자신이 보유한 마법을 삭제합니다.'
+)
+@app_commands.describe(
+    마법 = '삭제할 마법을 선택해주세요.'
+)
+@app_commands.autocomplete(마법 = 마법자동완성)
+async def 마법삭제(interaction: discord.Interaction, 마법: str) :
+    user_id = interaction.user.id
+    deleting_magic = 마법
+    embed = discord.Embed(title = '마법삭제')
+
+    cursor.execute(
+        "SELECT spells FROM user_spells WHERE user_id = ?",
+        (user_id,)
+    )
+
+    result = cursor.fetchone()
+
+    if result is not None :
+        user_magic = json.loads(result[0])
+    else :
+        user_magic = {}
+
+    if deleting_magic not in user_magic:
+        await interaction.response.send_message(
+            "등록된 마법이 없습니다.",
+            ephemeral = True
+        )
+        return
+
+    embed.add_field(
+        name = f"**{deleting_magic}({user_magic[deleting_magic]['mastery']}LV)**",
+        value = '삭제 완료됐습니다.',
+        inline = False
+    )
+
+    del user_magic[deleting_magic]
+
+    cursor.execute("""
+        UPDATE user_spells
+        SET spells = ?
+        WHERE user_id = ?
+    """, (json.dumps(user_magic, ensure_ascii = False), user_id))
+    db.commit()
+
+    await interaction.response.send_message(embed = embed)
+
 bot.run(TOKEN)
