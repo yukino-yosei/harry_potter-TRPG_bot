@@ -84,7 +84,7 @@ sex_choices = [
     숙련도 = '1~10 사이의 값'
 )
 @app_commands.choices(마법분류 = spell_choices)
-async def 마법추가(interaction: discord.Interaction, 마법이름: str, 마법설명: str, 마법분류: app_commands.Choice[str], 숙련도: app_commands.Range[int, 1, 10]) :
+async def 마법추가(interaction: discord.Interaction, 마법이름: str, 마법설명: str, 마법분류: app_commands.Choice[str], 숙련도: app_commands.Range[int, 1, 10], 소모마력: int) :
     embed = discord.Embed(title = '사용 가능한 마법 추가')
     user_id = interaction.user.id
     category = 마법분류.value
@@ -115,7 +115,8 @@ async def 마법추가(interaction: discord.Interaction, 마법이름: str, 마�
         magic_list[마법이름] = {
             'description' : 마법설명,
             'classification' : category,
-            'mastery' : 숙련도
+            'mastery' : 숙련도,
+            'useMP' : 소모마력
         }
         cursor.execute("""
         INSERT INTO user_spells (user_id, spells)
@@ -144,6 +145,12 @@ async def 마법추가(interaction: discord.Interaction, 마법이름: str, 마�
             value = f'{숙련도}LV',
             inline = False
         )
+        embed.add_field(
+            name = '소모마력',
+            value = f'{소모마력}MP',
+            inline = False
+        )
+
         await interaction.response.send_message(embed = embed)
 
 @bot.tree.command(
@@ -499,6 +506,62 @@ async def 마법삭제(interaction: discord.Interaction, 마법: str) :
         WHERE user_id = ?
     """, (json.dumps(user_magic, ensure_ascii = False), user_id))
     db.commit()
+
+    await interaction.response.send_message(embed = embed)
+
+@bot.tree.command(
+    name = '마법조회',
+    description = '보유 중인 마법을 조회합니다.'
+)
+@app_commands.describe(
+    마법 = '찾을 마법을 선택해주세요.'
+)
+@app_commands.autocomplete(마법 = 마법자동완성)
+async def 마법조회(interaction: discord.Interaction, 마법: str) :
+    user_id = interaction.user.id
+
+    cursor.execute(
+        "SELECT spells FROM user_spells WHERE user_id = ?",
+        (user_id,)
+    )
+
+    result = cursor.fetchone()
+
+    if result is not None :
+        user_magic = json.loads(result[0])
+    else :
+        user_magic = {}
+
+    if 마법 not in user_magic:
+        await interaction.response.send_message(
+            "등록된 마법이 없습니다.",
+            ephemeral = True
+        )
+        return
+    
+    search_magic = user_magic[마법]
+
+    embed = discord.Embed(title = 마법)
+    
+    embed.add_field(
+        name = '마법설명',
+        value = search_magic['description'],
+        inline = False
+    )
+    embed.add_field(
+        name = '마법분류',
+        value = search_magic['classification'],
+        inline = False
+    )
+    embed.add_field(
+        name = '숙련도',
+        value = f'{search_magic['mastery']}LV',
+        inline = False
+    )
+    embed.add_field(
+        name = '소모마력',
+        value = f'{search_magic['useMP']}MP'
+    )
 
     await interaction.response.send_message(embed = embed)
 
