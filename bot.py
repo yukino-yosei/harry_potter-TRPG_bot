@@ -29,8 +29,8 @@ CREATE TABLE IF NOT EXISTS user_spells (
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS magic_point (
     user_id INTEGER PRIMARY KEY,
-    max_points INTEGER DEFAULT 0,
-    points INTEGER DEFAULT 0
+    points INTEGER DEFAULT 0,
+    max_points INTEGER DEFAULT 0
 )
 """)
 
@@ -351,10 +351,10 @@ async def 마력설정(interaction: discord.Interaction, 현재마력: int, 최�
         VALUES (?, ?, ?)
         ON CONFLICT(user_id)
         DO UPDATE SET
-            max_points = excluded.max_points,
-            points = excluded.points
+            points = excluded.max_points,
+            max_points = excluded.points
         """, (
-            user_id, 최대마력, 현재마력
+            user_id, 현재마력, 최대마력
         ))
     db.commit()
     
@@ -363,6 +363,72 @@ async def 마력설정(interaction: discord.Interaction, 현재마력: int, 최�
         value = f"**{현재마력} / {최대마력}**" if 현재마력 == 최대마력 or 현재마력 == 0 else f"{현재마력} / {최대마력}",
         inline = False
     )
+
+    await interaction.response.send_message(embed = embed)
+
+@bot.tree.command(
+    name = '마력회복',
+    description = '수치만큼 마력을 회복합니다. (기본값 1)'
+)
+@app_commands.describe(
+    count = '수치만큼 마력을 회복합니다. 음수값이라면 차감됩니다. (생략시 1)'
+)
+async def 마력회복(interaction: discord.Interaction, count: int = 1) :
+    user_id = interaction.user.id
+
+    cursor.execute(
+        "SELECT points, max_points FROM magic_point WHERE user_id = ?",
+        (user_id,)
+    )
+    result = cursor.fetchone()
+
+    if result is None:
+        await interaction.response.send_message(
+            "현재 마력이 설정되어있지 않습니다.",
+            ephemeral = True
+        )
+        return
+    
+    points, max_points = result
+
+    embed = discord.Embed(title = '마력회복')
+
+    embed.add_field(
+        name = '이전상태',
+        value = f'{points} / {max_points}',
+        inline = False
+    )
+    embed.add_field(
+        name = '',
+        value = '↓',
+        inline = False
+    )
+
+    before_points = points
+    points += count
+    if points > max_points :
+        points = max_points
+    elif points < 0 :
+        points = 0
+
+    embed.add_field(
+        name = '현재상태',
+        value = f'{points} / {max_points}',
+        inline = False
+    )
+
+    embed.add_field(
+        name = '',
+        value = f'총 {points - before_points}만큼 마력을 회복했습니다.',
+        inline = False
+    )
+
+    cursor.execute("""
+        UPDATE magic_point
+        SET points = ?
+        WHERE user_id = ?
+    """, (points, user_id))
+    db.commit()
 
     await interaction.response.send_message(embed = embed)
 
