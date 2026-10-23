@@ -663,4 +663,136 @@ async def 마법사용(interaction: discord.Interaction, 마법: str) :
             ephemeral = True
         )
 
+@bot.tree.command(
+    name = '소모마력조정',
+    description = '마법의 소모 마력을 조정합니다.'
+)
+@app_commands.describe(
+    마법 = '소모 마력을 조정할 마법을 선택해주세요.',
+    소모마력 = '소모 마력을 몇으로 설정할지 입력해주세요.'
+)
+@app_commands.autocomplete(
+    마법 = 마법자동완성
+)
+async def 소모마력조정(interaction: discord.Interaction, 마법: str, 소모마력: int) :
+    user_id = interaction.user.id
+
+    cursor.execute(
+        "SELECT spells FROM user_spells WHERE user_id = ?",
+        (user_id,)
+    )
+
+    result = cursor.fetchone()
+
+    if result is not None :
+        user_magic = json.loads(result[0])
+    else :
+        user_magic = {}
+
+    if 마법 not in user_magic:
+        await interaction.response.send_message(
+            "등록된 마법이 없습니다.",
+            ephemeral = True
+        )
+        return
+    
+    fix_magic = user_magic[마법]
+
+    embed = discord.Embed(title = '조정결과')
+
+    embed.add_field(
+        name = '이전',
+        value = f'{fix_magic['useMP']}',
+        inline = False
+    )
+    embed.add_field(
+        name = '',
+        value = '↓',
+        inline = False
+    )
+
+    fix_magic['useMP'] = 소모마력
+    user_magic[마법] = fix_magic
+
+    embed.add_field(
+        name = '이후',
+        value = f'{fix_magic['useMP']}',
+        inline = False
+    )
+
+    cursor.execute("""
+        UPDATE user_spells
+        SET spells = ?
+        WHERE user_id = ?
+    """, (json.dumps(user_magic, ensure_ascii = False), user_id))
+    db.commit()
+
+    await interaction.response.send_message(embed = embed)
+
+@bot.tree.command(
+    name = '마법숙련도조정',
+    description = '마법의 숙련도를 조정합니다.'
+)
+@app_commands.describe(
+    마법 = '숙련도를 조정할 마법을 선택해주세요.',
+    숙련도 = '숙련도 몇(LV)로 설정할지 선택해주세요.(1~10)'
+)
+@app_commands.autocomplete(
+    마법 = 마법자동완성
+)
+async def 마법숙련도조정(interaction: discord.Interaction, 마법: str, 숙련도: app_commands.Range[int, 1, 10]) :
+    user_id = interaction.user.id
+
+    cursor.execute(
+        "SELECT spells FROM user_spells WHERE user_id = ?",
+        (user_id,)
+    )
+
+    result = cursor.fetchone()
+
+    if result is not None :
+        user_magic = json.loads(result[0])
+    else :
+        user_magic = {}
+
+    if 마법 not in user_magic:
+        await interaction.response.send_message(
+            "등록된 마법이 없습니다.",
+            ephemeral = True
+        )
+        return
+    
+    fix_magic = user_magic[마법]
+
+    embed = discord.Embed(title = '조정결과')
+
+    embed.add_field(
+        name = '이전',
+        value = f'{fix_magic['mastery']}LV',
+        inline = False
+    )
+    embed.add_field(
+        name = '',
+        value = '↓',
+        inline = False
+    )
+
+    fix_magic['mastery'] = 숙련도
+    user_magic[마법] = fix_magic
+
+    embed.add_field(
+        name = '이후',
+        value = f'{fix_magic['mastery']}LV',
+        inline = False
+    )
+
+    cursor.execute("""
+        UPDATE user_spells
+        SET spells = ?
+        WHERE user_id = ?
+    """, (json.dumps(user_magic, ensure_ascii = False), user_id))
+    db.commit()
+
+    await interaction.response.send_message(embed = embed)
+
 bot.run(TOKEN)
