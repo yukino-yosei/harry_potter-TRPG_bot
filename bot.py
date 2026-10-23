@@ -565,4 +565,102 @@ async def 마법조회(interaction: discord.Interaction, 마법: str) :
 
     await interaction.response.send_message(embed = embed)
 
+@bot.tree.command(
+    name = '마법사용',
+    description = '보유 중인 마법을 사용합니다.'
+)
+@app_commands.describe(
+    마법 = '사용할 마법을 선택해주세요.'
+)
+@app_commands.autocomplete(마법 = 마법자동완성)
+async def 마법사용(interaction: discord.Interaction, 마법: str) :
+    user_id = interaction.user.id
+
+    cursor.execute(
+        "SELECT spells FROM user_spells WHERE user_id = ?",
+        (user_id,)
+    )
+
+    result = cursor.fetchone()
+
+    if result is not None :
+        user_magic = json.loads(result[0])
+    else :
+        user_magic = {}
+
+    if 마법 not in user_magic:
+        await interaction.response.send_message(
+            "등록된 마법이 없습니다.",
+            ephemeral = True
+        )
+        return
+    
+    using_magic = user_magic[마법]
+
+    cursor.execute(
+        "SELECT points FROM magic_point WHERE user_id = ?",
+        (user_id,)
+    )
+
+    result = cursor.fetchone()
+
+    if result is None :
+        await interaction.response.send_message(
+            "마력이 설정되어 있지 않습니다.",
+            ephemeral = True
+        )
+        return
+
+    current_mp, = result
+
+    if using_magic['useMP'] <= current_mp :
+        current_mp -= using_magic['useMP']
+
+        cursor.execute("""
+            UPDATE magic_point
+            SET points = ?
+            WHERE user_id = ?
+        """, (current_mp, user_id))
+        db.commit()
+
+        await interaction.response.send_message(
+            f"## {마법}"
+        )
+
+        embed = discord.Embed(title = '마법 사용 결과')
+        
+        embed.add_field(
+            name = '소모 마력',
+            value = using_magic['useMP'],
+            inline = False
+        )
+        embed.add_field(
+            name = '현재 남은 마력',
+            value = f'{current_mp}',
+            inline = False
+        )
+
+        await interaction.followup.send(
+            embed = embed,
+            ephemeral = True
+        )
+    else :
+        embed = discord.Embed(title = '마법 사용 결과')
+
+        embed.add_field(
+            name = '소모 마력',
+            value = using_magic['useMP'],
+            inline = False
+        )
+        embed.add_field(
+            name = '현재 남은 마력',
+            value = f'{current_mp}**({using_magic['useMP'] - current_mp}MP 부족)**',
+            inline = False
+        )
+
+        await interaction.response.send_message(
+            embed = embed,
+            ephemeral = True
+        )
+
 bot.run(TOKEN)
