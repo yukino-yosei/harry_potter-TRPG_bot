@@ -66,12 +66,14 @@ TableTop Roll Playing Game bot of Harry-hotter.
 - (만약 입력한 마법을 보유 중이 아니라면 "등록된 마법이 없습니다."를 자신만 보이게 반환합니다.)
 ---
 ## 데이터베이스
-magic_point
-| user's discord id | points | max_points |
-status
-| user's discord id | character_name | sex | age | dormitory | grade |
-user_spells
-| user's discord id | spells(json) |
+    magic_point
+    | user's discord id | points | max_points |
+
+    status
+    | user's discord id | character_name | sex | age | dormitory | grade |
+
+    user_spells
+    | user's discord id | spells(json) |
 ---
 (English)
 ## Table of Contents
@@ -137,9 +139,11 @@ user_spells
 - (If the magic is not held, return "No registered magic." visible only to the user.)
 ---
 ## database
-magic_point
-| user's discord id | points | max_points |
-status
-| user's discord id | character_name | sex | age | dormitory | grade |
-user_spells
-| user's discord id | spells(json) |
+    magic_point
+    | user's discord id | points | max_points |
+
+    status
+    | user's discord id | character_name | sex | age | dormitory | grade |
+
+    user_spells
+    | user's discord id | spells(json) |
