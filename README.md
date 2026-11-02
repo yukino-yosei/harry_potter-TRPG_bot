@@ -68,10 +68,8 @@ TableTop Roll Playing Game bot of Harry-hotter.
 ## 데이터베이스
 magic_point
 | user's discord id | points | max_points |
-
 status
 | user's discord id | character_name | sex | age | dormitory | grade |
-
 user_spells
 | user's discord id | spells(json) |
 ---
@@ -141,9 +139,7 @@ user_spells
 ## database
 magic_point
 | user's discord id | points | max_points |
-
 status
 | user's discord id | character_name | sex | age | dormitory | grade |
-
 user_spells
 | user's discord id | spells(json) |
