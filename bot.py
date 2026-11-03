@@ -54,13 +54,13 @@ async def on_ready():
 
 def student_color(dor) :
     if dor == '그리핀도르(Gryffindor)' :
-        color = discord.Color.from_str('#740001')
+        return '#740001'
     elif dor == '슬리데린(Slytherin)' :
-        color = discord.Color.from_str('#1a472a')
+        return '#1a472a'
     elif dor == '후플푸프(Hufflepuff)' :
-        color = discord.Color.from_str('#ecb939')
+        return '#ecb939'
     else :
-        color = discord.Color.from_str('#0e1a40')
+        return '#0e1a40'
 
 classification = [
     '일반마법(Charm)',
@@ -190,7 +190,7 @@ async def 상태창(interaction: discord.Interaction) :
 
     embed = discord.Embed(
         title = f'{pc_name}',
-        student_color(pc_dormitory)
+        color = discord.Color.from_str(student_color(pc_dormitory))
     )
 
     embed.add_field(
@@ -251,7 +251,7 @@ async def 상태등록(interaction: discord.Interaction, 이름: str, 성별: ap
     selected_sex = 성별.value
     embed = discord.Embed(
         title = f'**{이름}**',
-        student_color(selected_dormitory)
+        color = discord.Color.from_str(student_color(selected_dormitory))
     )
 
     cursor.execute("""
@@ -316,7 +316,10 @@ async def 남은마력(interaction: discord.Interaction) :
 
     character_name, = result
 
-    embed = discord.Embed(title = character_name)
+    embed = discord.Embed(
+        title = character_name,
+        color = discord.Color.from_str('#00ff77')
+    )
 
     cursor.execute(
         "SELECT points, max_points FROM magic_point WHERE user_id = ?",
