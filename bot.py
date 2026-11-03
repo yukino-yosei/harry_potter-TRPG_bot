@@ -52,6 +52,16 @@ bot = MyBot()
 async def on_ready():
     print(f"로그인 완료: {bot.user}")
 
+def student_color(dor) :
+    if dor == '그리핀도르(Gryffindor)' :
+        color = discord.Color.from_str('#740001')
+    elif dor == '슬리데린(Slytherin)' :
+        color = discord.Color.from_str('#1a472a')
+    elif dor == '후플푸프(Hufflepuff)' :
+        color = discord.Color.from_str('#ecb939')
+    else :
+        color = discord.Color.from_str('#0e1a40')
+
 classification = [
     '일반마법(Charm)',
     '변형마법(Transfiguration)',
@@ -85,7 +95,10 @@ sex_choices = [
 )
 @app_commands.choices(마법분류 = spell_choices)
 async def 마법추가(interaction: discord.Interaction, 마법이름: str, 마법설명: str, 마법분류: app_commands.Choice[str], 숙련도: app_commands.Range[int, 1, 10], 소모마력: int) :
-    embed = discord.Embed(title = '사용 가능한 마법 추가')
+    embed = discord.Embed(
+        title = '사용 가능한 마법 추가',
+        color = discord.Color.from_str('#ff00f2')
+    )
     user_id = interaction.user.id
     category = 마법분류.value
 
@@ -175,7 +188,10 @@ async def 상태창(interaction: discord.Interaction) :
 
     pc_name, pc_sex, pc_age, pc_dormitory, pc_grade = result
 
-    embed = discord.Embed(title = f'{pc_name}')
+    embed = discord.Embed(
+        title = f'{pc_name}',
+        student_color(pc_dormitory)
+    )
 
     embed.add_field(
         name = '기본정보',
@@ -233,7 +249,10 @@ async def 상태등록(interaction: discord.Interaction, 이름: str, 성별: ap
     user_id = interaction.user.id
     selected_dormitory = 기숙사.value
     selected_sex = 성별.value
-    embed = discord.Embed(title = f'**{이름}**')
+    embed = discord.Embed(
+        title = f'**{이름}**',
+        student_color(selected_dormitory)
+    )
 
     cursor.execute("""
     INSERT INTO status (
@@ -348,7 +367,10 @@ async def 마력설정(interaction: discord.Interaction, 현재마력: int, 최�
     
     character_name, = result
     
-    embed = discord.Embed(title = character_name)
+    embed = discord.Embed(
+        title = character_name,
+        color = discord.Color.from_str('#00ff77')
+    )
 
     if 현재마력 > 최대마력 :
         현재마력 = 최대마력
@@ -398,7 +420,10 @@ async def 마력회복(interaction: discord.Interaction, count: int = 1) :
     
     points, max_points = result
 
-    embed = discord.Embed(title = '마력회복')
+    embed = discord.Embed(
+        title = '마력회복',
+        color = discord.Color.from_str('#00ff77')
+    )
 
     embed.add_field(
         name = '이전상태',
@@ -471,7 +496,10 @@ async def 마법자동완성(
 async def 마법삭제(interaction: discord.Interaction, 마법: str) :
     user_id = interaction.user.id
     deleting_magic = 마법
-    embed = discord.Embed(title = '마법삭제')
+    embed = discord.Embed(
+        title = '마법삭제',
+        color = discord.Color.from_str('#ff0000')
+    )
 
     cursor.execute(
         "SELECT spells FROM user_spells WHERE user_id = ?",
@@ -541,7 +569,10 @@ async def 마법조회(interaction: discord.Interaction, 마법: str) :
     
     search_magic = user_magic[마법]
 
-    embed = discord.Embed(title = 마법)
+    embed = discord.Embed(
+        title = 마법,
+        color = discord.Color.from_str('#00ff77')
+    )
     
     embed.add_field(
         name = '마법설명',
@@ -627,7 +658,10 @@ async def 마법사용(interaction: discord.Interaction, 마법: str) :
             f"## {마법}"
         )
 
-        embed = discord.Embed(title = '마법 사용 결과')
+        embed = discord.Embed(
+            title = '마법 사용 결과',
+            color = discord.Color.from_str('#00ff77')
+        )
         
         embed.add_field(
             name = '소모 마력',
@@ -698,7 +732,10 @@ async def 소모마력조정(interaction: discord.Interaction, 마법: str, 소�
     
     fix_magic = user_magic[마법]
 
-    embed = discord.Embed(title = '조정결과')
+    embed = discord.Embed(
+        title = '조정결과',
+        color = discord.Color.from_str('#00ff77')
+    )
 
     embed.add_field(
         name = '이전',
@@ -764,7 +801,10 @@ async def 마법숙련도조정(interaction: discord.Interaction, 마법: str, �
     
     fix_magic = user_magic[마법]
 
-    embed = discord.Embed(title = '조정결과')
+    embed = discord.Embed(
+        title = '조정결과',
+        color = discord.Color.from_str('#00ff77')
+    )
 
     embed.add_field(
         name = '이전',
